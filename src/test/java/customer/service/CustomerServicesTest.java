@@ -3,19 +3,22 @@ package customer.service;
 import customer.dto.CustomerDTO;
 import customer.model.Customer;
 import customer.repository.CustomerRepository;
+import customer.util.ValidationService;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.mockito.Mock;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.context.junit4.SpringRunner;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
@@ -28,16 +31,18 @@ public class CustomerServicesTest {
     @Autowired
     private CustomerService customerService;
 
-    @MockBean
+    @Autowired
     private CustomerRepository customerRepository;
+
+    @Autowired
+    private ValidationService validationService;
+
 
     @Test
     public void getAllCustomersTest(){
         Integer pageSize = 5;
         Integer currentpage = 3;
         customerService.getCustomers();
-//        when(customerRepository.findAll()).thenReturn(Stream.of(new Customer(),new Customer()).collect(Collectors.toList()));
-//        assertEquals(2,customerService.getCustomersforTest().size());
     }
 
     @Test
@@ -55,8 +60,10 @@ public class CustomerServicesTest {
 
     @Test
     public void validateNumbers(){
-        String patterns = "\\(237\\)\\ ?[2368]\\d{7,8}$"
-                            + "\\(251\\)\\ ?[1-59]\\d{8}$"
+        // test with different patterns
+        // this test will fail
+        String patterns = "\\(237\\)\\ ?[236]\\d{7,8}$"
+                            + "\\(251\\)\\ ?[1-5]\\d{8}$"
                             + "\\(212\\)\\ ?[5-9]\\d{8}$"
                             + "\\(258\\)\\ ?[28]\\d{7,8}$"
                             + "\\(256\\)\\ ?\\d{9}$";
@@ -69,5 +76,18 @@ public class CustomerServicesTest {
             Matcher matcher = pattern.matcher(number);
             assertTrue(matcher.matches());
         }
+    }
+
+    @Test
+    public void matchedPatternsTest(){
+        List<Customer> list = customerRepository.findAll();
+
+        Map<String, List<Customer>> customerMap = list.stream().collect(Collectors.groupingBy(x -> x.getPhoneNumber().substring(1, 4)));
+        customerMap.entrySet()
+                .stream()
+                .forEach(c -> c.getValue().stream().forEach(x -> {
+                            boolean matches = validationService.matchCriteria(c.getKey(), x.getPhoneNumber());
+                        })
+                );
     }
 }

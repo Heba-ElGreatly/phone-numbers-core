@@ -3,6 +3,7 @@ package customer.service;
 import customer.dto.CustomerDTO;
 import customer.model.Customer;
 import customer.repository.CustomerRepository;
+import customer.util.ValidationService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -24,6 +25,8 @@ public class CustomerServiceImpl implements CustomerService {
 
     @Autowired
     private CustomerRepository customerRepository;
+    @Autowired
+    private ValidationService validationService;
 
     public Map<String, String> countries = new HashMap<>();
 
@@ -45,7 +48,7 @@ public class CustomerServiceImpl implements CustomerService {
     @Override
     public List<CustomerDTO> getFilteredCustomers(Integer pageNo, Integer pageSize) {
 
-        Pageable page = PageRequest.of(pageNo, pageSize);
+        Pageable page = PageRequest.of(pageNo-1, pageSize);
         Page<Customer> customerList = customerRepository.findAll(page);
         List<CustomerDTO> list = mapCustomers(customerList.getContent());
         return list;
@@ -61,60 +64,13 @@ public class CustomerServiceImpl implements CustomerService {
         };
     }
 
-    public boolean matchCriteria(String code, String phoneNumber) {
-        Pattern pattern;
-        Matcher matcher;
-        boolean match = false;
-
-        switch (code) {
-            case "237":
-                pattern = Pattern.compile("\\(237\\)\\ ?[2368]\\d{7,8}$");
-                matcher = pattern.matcher(phoneNumber);
-                if (matcher.matches()) {
-                    match = true;
-                }
-                break;
-            case "251":
-                pattern = Pattern.compile("\\(251\\)\\ ?[1-59]\\d{8}$");
-                matcher = pattern.matcher(phoneNumber);
-                if (matcher.matches()) {
-                    match = true;
-                }
-                break;
-            case "212":
-                pattern = Pattern.compile("\\(212\\)\\ ?[5-9]\\d{8}$");
-                matcher = pattern.matcher(phoneNumber);
-                if (matcher.matches()) {
-                    match = true;
-                }
-                break;
-            case "258":
-                pattern = Pattern.compile("\\(258\\)\\ ?[28]\\d{7,8}$");
-                matcher = pattern.matcher(phoneNumber);
-                if (matcher.matches()) {
-                    match = true;
-                }
-                break;
-            case "256":
-                pattern = Pattern.compile("\\(256\\)\\ ?\\d{9}$");
-                matcher = pattern.matcher(phoneNumber);
-                if (matcher.matches()) {
-                    match = true;
-                }
-                break;
-        }
-
-        return match;
-    }
-
-
     private List<CustomerDTO> mapCustomers(List<Customer> customerList) {
         List<CustomerDTO> list = new ArrayList<>();
         Map<String, List<Customer>> customerMap = customerList.stream().collect(Collectors.groupingBy(x -> x.getPhoneNumber().substring(1, 4)));
         customerMap.entrySet()
                 .stream()
                 .forEach(c -> c.getValue().stream().forEach(x -> {
-                            boolean matches = matchCriteria(c.getKey(), x.getPhoneNumber());
+                            boolean matches = validationService.matchCriteria(c.getKey(), x.getPhoneNumber());
                             if (matches) {
                                 CustomerDTO customerDto = new CustomerDTO(x.getName(), x.getPhoneNumber(), "valid", countries.get(c.getKey()));
                                 list.add(customerDto);
