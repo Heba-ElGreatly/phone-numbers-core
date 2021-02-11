@@ -14,13 +14,14 @@ filterd API takes page number and page size as parameters, you can use http://lo
 
 
 ## How To Run java application
-1- open cmd at code location 
-2- build the code using --> mvn clean package -DskipTests
-3- run the app --> java -jar {jar path}\PhoneNumbersValidation-1.0-SNAPSHOT.jar
+1- open cmd at code location <br />
+2- build the code using --> mvn clean package -DskipTests <br />
+3- run the app --> java -jar {jar path}\PhoneNumbersValidation-1.0-SNAPSHOT.jar 
 
 
 ## Docker
-open cmd at backend code directory then follow the follwing commands to build docker image:
-build java application using maven --> mvn clean package -DskipTests
-then use this command to build the image --> docker build -t phone-numbers .
-and to run the container use --> docker run -d -p 8080:8080 phone-numbers
+To build docker image:
+1- open cmd at backend code directory. <br /> 
+2- build java application using maven --> mvn clean package -DskipTests  <br />
+3- build the image --> docker build -t phone-numbers .   <br />
+4- run the container use --> docker run -d -p 8080:8080 phone-numbers
